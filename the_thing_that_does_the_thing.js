@@ -32,7 +32,17 @@ let line_start_x = null;
 let line_start_y = null;
 let triangle_start_x = null;
 let triangle_start_y = null;
-
+let selection_path = [];
+let select_start_x = null;
+let select_start_y = null;
+let selection = null;
+let background_color = "#ffffff"
+let isDraggingSelection = false;
+let isResizingSelection = false;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+let resizeHandleIndex = -1;
+let backgroundSnapshot = null
 
 
 let isMouseDown = false;
@@ -52,6 +62,104 @@ function loadCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
   };
+}
+
+function getBounds(path) {
+  let xs = path.map(p => p.x);
+  let ys = path.map(p => p.y);
+  return {
+    x: Math.min(...xs),
+    y: Math.min(...ys),
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys)
+  };
+}
+
+function getSelectionHandles(sel){
+  const cx = sel.x + sel.width / 2 + sel.offsetX;
+  const cy = sel.y + sel.height / 2 + sel.offsetY;
+  const hw = (sel.width * sel.scale) / 2;
+  const hh = (sel.height * sel.scale) / 2;
+  const cos = Math.cos(sel.rotation);
+  const sin = Math.sin(sel.rotation);
+
+  const localPoints = [
+    [-hw, -hh], [0, -hh], [hw, -hh],
+    [-hw,   0],            [hw,   0],
+    [-hw,  hh], [0,  hh], [hw,  hh],
+  ];
+
+  return localPoints.map(([lx, ly]) => ({
+    x: cx + lx * cos - ly * sin,
+    y: cy + lx * sin + ly * cos,
+  }));
+}
+
+function drawSelectionHandles(sel) {
+  const handles = getSelectionHandles(sel);
+  const cx = sel.x + sel.width / 2 + sel.offsetX;
+  const cy = sel.y + sel.height / 2 + sel.offsetY;
+  const hw = (sel.width * sel.scale) / 2;
+  const hh = (sel.height * sel.scale) / 2;
+
+  // Draw bounding box
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(sel.rotation);
+  ctx.strokeStyle = "#0099ff";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 3]);
+  ctx.strokeRect(-hw, -hh, hw * 2, hh * 2);
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // Draw handles
+  handles.forEach(h => {
+    ctx.beginPath();
+    ctx.arc(h.x, h.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+    ctx.strokeStyle = "#0099ff";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+}
+
+function clickTestHandle(mx, my, sel) {
+  const handles = getSelectionHandles(sel);
+  for (let i = 0; i < handles.length; i++) {
+    const dx = mx -handles[i].x
+    const dy = my - handles[i].y
+    if (Math.sqrt(dx * dx + dy * dy) < 10) return i;
+  }
+  return -1;
+}
+
+function isInsideSelection(mx, my, sel) {
+  // Transform point into selection's local space
+  const cx = sel.x+sel.width /2 + sel.offsetX;
+  const cy = sel.y +sel.height / 2 + sel.offsetY;
+  const cos = Math.cos(-sel.rotation);
+  const sin = Math.sin(-sel.rotation);
+  const dx = mx- cx
+  const dy = my- cy
+  const lx = dx* cos - dy * sin
+  const ly = dx * sin + dy * cos
+  const hw = (sel.width * sel.scale) / 2;
+  const hh = (sel.height * sel.scale) / 2;
+  return Math.abs(lx) <= hw && Math.abs(ly) <= hh;
+}
+
+function clearSelectionHandles() {
+  if (!selection || !backgroundSnapshot) return;
+  ctx.putImageData(backgroundSnapshot, 0, 0);
+  const cx = selection.x+(selection.width/2)+ selection.offsetX;
+  const cy = selection.y+(selection.height/2)+ selection.offsetY;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(selection.scale, selection.scale);
+  ctx.drawImage(selection.img, -selection.width/2, -selection.height/2);
+  ctx.restore();
 }
 
 window.addEventListener("load", loadCanvas);
@@ -90,6 +198,30 @@ document.addEventListener('mousedown', (event) => {
     // for live preview of the thing
     snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
   }
+    if( mode === "lasso"){
+        selection_path = [];
+        is_selecting = true;
+        select_start_x = canvas_x_start;
+        select_start_y = canvas_y_start;
+        
+    }
+
+    if (mode === "selection" && selection) {
+      const xfactor = canvas.width /rect.width;
+      const yfactor = canvas.height /rect.height;
+      const mx = Math.floor((event.clientX- rect.left)*xfactor);
+      const my = Math.floor((event.clientY- rect.top)*yfactor);
+
+      resizeHandleIndex = clickTestHandle(mx, my, selection);
+
+      if (resizeHandleIndex !== -1) {
+        isResizingSelection = true;
+      } else if (isInsideSelection(mx, my, selection)) {
+        isDraggingSelection = true;
+        dragOffsetX = mx - (selection.x + selection.offsetX);
+        dragOffsetY = my - (selection.y + selection.offsetY);
+      }
+    }
   
 });
 
@@ -97,6 +229,76 @@ document.addEventListener('mouseup', () => {
   isMouseDown = false;
   interpolation_x = null;
   interpolation_y = null;
+  if(mode === "lasso" && selection_path.length>2){
+    // to like select something you gotta set up a separate canvas, cant really edit orignal it :(
+    const bounds = getBounds(selection_path);
+    const temp_canvas = document.createElement("canvas");
+    const tctx = temp_canvas.getContext("2d")
+    temp_canvas.width = bounds.width;
+    temp_canvas.height = bounds.height;
+    tctx.save();
+    tctx.beginPath();
+    tctx.moveTo(selection_path[0].x - bounds.x, selection_path[0].y - bounds.y);
+
+    for (let i = 1; i < selection_path.length; i++) {
+      tctx.lineTo(selection_path[i].x - bounds.x, selection_path[i].y - bounds.y);
+    }
+
+    tctx.closePath();
+    tctx.clip();
+
+    tctx.drawImage(canvas, -bounds.x, -bounds.y);
+    tctx.restore();
+    // now remove the selected region from the orignal canvas
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.moveTo(selection_path[0].x, selection_path[0].y);
+    for (let i = 1; i < selection_path.length; i++) {
+      ctx.lineTo(selection_path[i].x, selection_path[i].y);
+    }
+    ctx.closePath();
+
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.fill();
+
+    ctx.restore();
+    ctx.globalCompositeOperation = "source-over";
+    backgroundSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    snapshot = backgroundSnapshot;
+
+    //now you store the selected thing
+    selection = {
+      img: temp_canvas,
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+      scale: 1,
+      rotation: 0,
+      offsetX: 0,
+      offsetY: 0
+    };
+    
+    mode = "selection";
+    // show the handle bars instantly after mouse down
+    selection_path = [];
+      const cx = selection.x + selection.width / 2 + selection.offsetX;
+      const cy = selection.y + selection.height / 2 + selection.offsetY;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(selection.rotation);
+      ctx.scale(selection.scale, selection.scale);
+      ctx.drawImage(selection.img, -selection.width / 2, -selection.height / 2);
+      ctx.restore();
+
+      drawSelectionHandles(selection);
+    }
+    if (mode === "selection") {
+      isDraggingSelection = false;
+      isResizingSelection = false;
+      resizeHandleIndex = -1;
+    }
   saveCanvas()
 });
 
@@ -115,7 +317,7 @@ canvas_clear.addEventListener("click",function(event){
 
 brush_select.addEventListener("input",function(){
   mode = brush_select.value;
-  console.log(mode)
+  clearSelectionHandles()
   })
 
 window.addEventListener("keydown", function(event){
@@ -126,30 +328,37 @@ window.addEventListener("keydown", function(event){
     case "b":
       mode = "brush"
       brush_select.value="brush"
+      clearSelectionHandles()
       break;
     case "r":
       mode = "rect_fill"
       brush_select.value="rect_fill"
+      clearSelectionHandles()
       break;
     case "R":
       mode = "rect_outline"
       brush_select.value="rect_outline"
+      clearSelectionHandles()
       break;
     case "t":
       mode = "triangle_fill"
       brush_select.value="triangle_fill"
+      clearSelectionHandles()
       break;
     case "T":
       mode = "triangle_outline"
       brush_select.value="triangle_outline"
+      clearSelectionHandles()
       break;
     case "c":
       mode = "circle_fill"
       brush_select.value="circle_fill"
+      clearSelectionHandles()
       break;
     case "C":
       mode = "circle_outline"
       brush_select.value="circle_outline"
+      clearSelectionHandles()
     default:
       return; // Quit when this doesn't handle the key event.
   }
@@ -239,6 +448,50 @@ document.addEventListener('mousemove', function(event){
       }
 
       }
+    if (mode === "lasso"){
+      selection_path.push({ x: canvas_x, y: canvas_y }); // storing points
+
+      if (selection_path.length === 1) {
+        ctx.beginPath();
+        ctx.moveTo(canvas_x, canvas_y);
+      } else {
+        ctx.lineTo(canvas_x, canvas_y);
+        ctx.lineWidth=1
+        ctx.stroke();
+      }
   }
-});
+    if (mode === "selection" && selection) {
+      ctx.putImageData(backgroundSnapshot, 0, 0);
+
+      if (isDraggingSelection) {
+        selection.offsetX = canvas_x-dragOffsetX-selection.x;
+        selection.offsetY = canvas_y -dragOffsetY-selection.y;
+      }
+
+      if (isResizingSelection) {
+        const cx = selection.x + selection.width/2 + selection.offsetX;
+        const cy = selection.y + selection.height/2 + selection.offsetY;
+        const dx = canvas_x - cx;
+        const dy = canvas_y - cy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        // Scale relative to half-diagonal of the original
+        const originalDiag = Math.sqrt(
+          (selection.width / 2) ** 2 + (selection.height / 2) ** 2
+        );
+        selection.scale = Math.max(0.05, dist / originalDiag);
+      }
+
+      // Draw the selection image
+      const cx = selection.x + selection.width/2 + selection.offsetX;
+      const cy = selection.y + selection.height/2 + selection.offsetY;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(selection.rotation);
+      ctx.scale(selection.scale, selection.scale);
+      ctx.drawImage(selection.img, -selection.width/2, -selection.height/2);
+      ctx.restore();
+
+      drawSelectionHandles(selection);
+    }
+}});
 
