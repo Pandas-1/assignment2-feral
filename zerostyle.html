@@ -11,8 +11,20 @@
   <p> crazy crazy   tom </p>
   <canvas id="canvas" width = "1440" height="480"></canvas>
   <div>
-    <input type="color" id="color_picker" value="#ff0000">
+    <input type="color" id="color_picker" value="#000000">
     <input type="range" id="brush_thicckness" min="0" max="100">
+    <input type="button" id="clear_canvas" value="clear canvas">
+    <label for="Brush">Choose a brush:</label>
+    <select name="Brush Selector" id="brush_selector">
+      <option value="brush" selected>Brush</option>
+      <option value="rect_outline">Rectangle Outline</option>
+      <option value="rect_fill">Rectangle Fill</option>
+      <option value="circle_outline">Circle Outline</option>
+      <option value="circle_fill">Circle Fill</option>
+      <option value="line">Straight Line</option>
+      <option value="triangle_fill">Triangle Fill</option>
+      <option value="triangle_outline">Triangle Outline</option>
+    </select>
   </div>
 </body>
 </html>

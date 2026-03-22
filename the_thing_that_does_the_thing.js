@@ -6,6 +6,8 @@ let height = window.innerHeight;
 const rect = canvas.getBoundingClientRect()
 const colorPicker = document.getElementById("color_picker");
 const brushThickness = document.getElementById("brush_thicckness");
+const canvas_clear = document.getElementById("clear_canvas");
+const brush_select = document.getElementById("brush_selector")
 
 
 ctx.fillRect(width/8,10,width*6/8,120)
@@ -34,7 +36,25 @@ let triangle_start_y = null;
 
 
 let isMouseDown = false;
-let mode = "triangle_fill"
+let mode = "brush"
+
+function saveCanvas() {
+  const dataURL = canvas.toDataURL('image/png')
+  localStorage.setItem("savedCanvas", dataURL);
+}
+function loadCanvas() {
+    const dataURL = localStorage.getItem("savedCanvas");
+  if (!dataURL) return;
+  const img = new Image();
+  img.src = dataURL;
+
+  img.onload = function () {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+  };
+}
+
+window.addEventListener("load", loadCanvas);
 
 document.addEventListener('mousedown', (event) => {
   isMouseDown = true;
@@ -77,6 +97,7 @@ document.addEventListener('mouseup', () => {
   isMouseDown = false;
   interpolation_x = null;
   interpolation_y = null;
+  saveCanvas()
 });
 
 colorPicker.addEventListener("change", function(event){
@@ -87,15 +108,53 @@ brushThickness.addEventListener("input", function(event){
   brush_radius= brush_radius_const*(1+Number(event.target.value))/200 // adding one removes the zero brush size shenanigens
   console.log(event.target.value)
 });
-//let brush_color = [10 , 10, 255 , 100]
 
+canvas_clear.addEventListener("click",function(event){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+})
 
-//document.addEventListener('mousemove', function(event) {
-    //console.log('Mouse X:', event.clientX, 'Mouse Y:', event.clientY);
-//    mouse_x = event.clientX
-//    mouse_y = event.clientY 
-//    console.log(mouse_x)    
-//});
+brush_select.addEventListener("input",function(){
+  mode = brush_select.value;
+  console.log(mode)
+  })
+
+window.addEventListener("keydown", function(event){
+  if (event.defaultPrevented) {
+    return; // Do nothing if the event was already processed
+  }
+  switch (event.key) {
+    case "b":
+      mode = "brush"
+      brush_select.value="brush"
+      break;
+    case "r":
+      mode = "rect_fill"
+      brush_select.value="rect_fill"
+      break;
+    case "R":
+      mode = "rect_outline"
+      brush_select.value="rect_outline"
+      break;
+    case "t":
+      mode = "triangle_fill"
+      brush_select.value="triangle_fill"
+      break;
+    case "T":
+      mode = "triangle_outline"
+      brush_select.value="triangle_outline"
+      break;
+    case "c":
+      mode = "circle_fill"
+      brush_select.value="circle_fill"
+      break;
+    case "C":
+      mode = "circle_outline"
+      brush_select.value="circle_outline"
+    default:
+      return; // Quit when this doesn't handle the key event.
+  }
+
+})
 
 
 document.addEventListener('mousemove', function(event){
@@ -107,15 +166,7 @@ document.addEventListener('mousemove', function(event){
     ctx.fillStyle = brush_color;
     const canvas_x = Math.floor((mouse_x - rect.left)*xfactor)
     const canvas_y = Math.floor((mouse_y - rect.top)*yfactor)
-    
-    // console.log(mouse_x, mouse_y)
-
-    //pixel_location_array = (canvas_y*canvas.width + canvas_x)*4
-    //data[pixel_location_array]=brush_color[0]
-    //data[pixel_location_array+1]=brush_color[1]
-    //data[pixel_location_array+2]=brush_color[2]
-    //data[pixel_location_array+3]=brush_color[3]
-    //console.log(ImageData.data[pixel_location],ImageData.data[pixel_location+1],ImageData.data[pixel_location+2],ImageData.data[pixel_location+3])
+  
     ctx.fillStyle = brush_color; 
     ctx.strokeStyle = brush_color;
     ctx.lineWidth = brush_radius*2
