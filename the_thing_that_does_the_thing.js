@@ -66,6 +66,7 @@ function loadCanvas() {
   img.onload = function () {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
+    saveStackPush()//inital push to save the background
   };
 }
 
@@ -111,6 +112,7 @@ function saveStackPush(){
 function undo_draw(){
   if (undo_tsp>=0){
     undo_tsp--
+    console.log(undo_tsp)
     let old_image = new Image();
     old_image = save_stack_undo[undo_tsp]
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas
@@ -118,9 +120,8 @@ function undo_draw(){
 }}
 
 function redo_draw(){
-  if (save_stack_undo.length > undo_tsp){
+  if (save_stack_undo.length-1 > undo_tsp){
     undo_tsp++
-    let next_image = new Image()
     new_image = save_stack_undo[undo_tsp]
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.putImageData(new_image, 0, 0); 
@@ -414,6 +415,13 @@ window.addEventListener("keydown", function(event){
   if (event.defaultPrevented) {
     return; // Do nothing if the event was already processed
   }
+  if (event.ctrlKey && event.shiftKey && (event.key === 'z' || event.key === 'Z')) {
+        redo_draw()
+    }
+  else if (event.ctrlKey && (event.key === 'z' || event.key === 'Z')) {
+        undo_draw()
+    }
+
   switch (event.key) {
     case "b":
       mode = "brush"
@@ -584,4 +592,6 @@ document.addEventListener('mousemove', function(event){
       drawSelectionHandles(selection);
     }
 }});
+
+
 //FIGURE OUT TEXT BOXES LATER WITH CSS POSITIONING AHAHAHAHAHAHAHHA
