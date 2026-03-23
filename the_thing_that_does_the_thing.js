@@ -421,6 +421,34 @@ window.addEventListener("keydown", function(event){
   else if (event.ctrlKey && (event.key === 'z' || event.key === 'Z')) {
         undo_draw()
     }
+  if (mode === "selection"){
+   if(event.key === "q"){
+    selection.rotation += 0.1
+    ctx.putImageData(backgroundSnapshot, 0, 0);
+    const cx = selection.x + selection.width/2 + selection.offsetX;
+    const cy = selection.y + selection.height/2 + selection.offsetY;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(selection.rotation);
+    ctx.scale(selection.scale, selection.scale);
+    ctx.drawImage(selection.img, -selection.width/2, -selection.height/2);
+    ctx.restore();
+    drawSelectionHandles(selection);
+   }
+    if(event.key === "w"){
+    selection.rotation -= 0.1
+    ctx.putImageData(backgroundSnapshot, 0, 0);
+    const cx = selection.x + selection.width/2 + selection.offsetX;
+    const cy = selection.y + selection.height/2 + selection.offsetY;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(selection.rotation);
+    ctx.scale(selection.scale, selection.scale);
+    ctx.drawImage(selection.img, -selection.width/2, -selection.height/2);
+    ctx.restore();
+    drawSelectionHandles(selection);
+   }
+  }
 
   switch (event.key) {
     case "b":
