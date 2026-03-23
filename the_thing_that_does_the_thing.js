@@ -10,6 +10,8 @@ const canvas_clear = document.getElementById("clear_canvas");
 const brush_select = document.getElementById("brush_selector");
 const lasso_tool = document.getElementById("selection_lasso");
 const image_input = document.getElementById("image-upload");
+const undo_button = document.getElementById("undo");
+const redo_button = document.getElementById("redo");
 
 
 ctx.fillRect(width/8,10,width*6/8,120)
@@ -44,6 +46,8 @@ let dragOffsetX = 0;
 let dragOffsetY = 0;
 let resizeHandleIndex = -1;
 let backgroundSnapshot = null
+let save_stack_undo = []
+let undo_tsp = -1
 
 
 let isMouseDown = false;
@@ -94,6 +98,33 @@ function getSelectionHandles(sel){
     x: cx + lx * cos - ly * sin,
     y: cy + lx * sin + ly * cos,
   }));
+}
+
+function saveStackPush(){
+  undo_tsp++
+  if(undo_tsp < save_stack_undo.length){  
+    save_stack_undo.length=undo_tsp}
+    save_stack_undo.push(ctx.getImageData(0,0,canvas.width,canvas.height));
+  console.log(undo_tsp, save_stack_undo)
+}
+
+function undo_draw(){
+  if (undo_tsp>=0){
+    undo_tsp--
+    let old_image = new Image();
+    old_image = save_stack_undo[undo_tsp]
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas
+            ctx.putImageData(old_image, 0, 0); 
+}}
+
+function redo_draw(){
+  if (save_stack_undo.length > undo_tsp){
+    undo_tsp++
+    let next_image = new Image()
+    new_image = save_stack_undo[undo_tsp]
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.putImageData(new_image, 0, 0); 
+  }
 }
 
 function drawSelectionHandles(sel) {
@@ -234,10 +265,11 @@ document.addEventListener('mousedown', (event) => {
         dragOffsetY = my - (selection.y + selection.offsetY);
       }
     }
+
   
 });
 
-document.addEventListener('mouseup', () => {
+document.addEventListener('mouseup', (event) => {
   isMouseDown = false;
   interpolation_x = null;
   interpolation_y = null;
@@ -314,6 +346,9 @@ document.addEventListener('mouseup', () => {
     if (mode !== "selection" && mode !== "lasso") {
     backgroundSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height); // this is to fix the bug which made adding new things after selection mode impossible due to background_snapshot not updating adequately
   }
+    if (canvas.contains(event.target)){
+      saveStackPush()
+    }
   saveCanvas()
 });
 
@@ -366,7 +401,15 @@ image_input.addEventListener("change",function(event){
     };
     reader.readAsDataURL(file); // Read file
 })
-  
+
+undo_button.addEventListener("click", function(event){
+  undo_draw()
+})
+
+redo_button.addEventListener("click" , function(event){
+  redo_draw()
+})
+
 window.addEventListener("keydown", function(event){
   if (event.defaultPrevented) {
     return; // Do nothing if the event was already processed
@@ -541,4 +584,4 @@ document.addEventListener('mousemove', function(event){
       drawSelectionHandles(selection);
     }
 }});
-
+//FIGURE OUT TEXT BOXES LATER WITH CSS POSITIONING AHAHAHAHAHAHAHHA
