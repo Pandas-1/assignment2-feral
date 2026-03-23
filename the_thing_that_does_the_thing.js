@@ -7,7 +7,9 @@ const rect = canvas.getBoundingClientRect()
 const colorPicker = document.getElementById("color_picker");
 const brushThickness = document.getElementById("brush_thicckness");
 const canvas_clear = document.getElementById("clear_canvas");
-const brush_select = document.getElementById("brush_selector")
+const brush_select = document.getElementById("brush_selector");
+const lasso_tool = document.getElementById("selection_lasso");
+const image_input = document.getElementById("image-upload");
 
 
 ctx.fillRect(width/8,10,width*6/8,120)
@@ -15,7 +17,6 @@ ctx.fillRect(width/8,10,width*6/8,120)
 let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 let data = imageData.data;
 
-console.log(width)
 let mouse_x = 0
 let mouse_y = 0
 let interpolation_x = null;
@@ -27,7 +28,7 @@ let rect_start_x = null;
 let rect_start_y = null;
 let circle_centre_x = null;
 let circle_centre_y = null;
-let snapshot = null;
+let snapshot = null; // initial canvas before drawing shapes for the live preview of shape being built
 let line_start_x = null;
 let line_start_y = null;
 let triangle_start_x = null;
@@ -150,17 +151,28 @@ function isInsideSelection(mx, my, sel) {
   return Math.abs(lx) <= hw && Math.abs(ly) <= hh;
 }
 
-function clearSelectionHandles() {
+function clearSelectionHandles(exit_selection = false) {
   if (!selection || !backgroundSnapshot) return;
+    if (exit_selection) { // when you exit selection you have to merge 
+      const cx = selection.x + selection.width / 2 + selection.offsetX;
+      const cy = selection.y + selection.height / 2 + selection.offsetY;
+
+      ctx.putImageData(backgroundSnapshot, 0, 0);
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(selection.rotation);
+      ctx.scale(selection.scale, selection.scale);
+      ctx.drawImage(selection.img, -selection.width / 2, -selection.height / 2);
+      ctx.restore();
+
+      backgroundSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      selection = null;
+      return;
+  }
   ctx.putImageData(backgroundSnapshot, 0, 0);
-  const cx = selection.x+(selection.width/2)+ selection.offsetX;
-  const cy = selection.y+(selection.height/2)+ selection.offsetY;
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.scale(selection.scale, selection.scale);
-  ctx.drawImage(selection.img, -selection.width/2, -selection.height/2);
-  ctx.restore();
 }
+
 
 window.addEventListener("load", loadCanvas);
 
@@ -299,6 +311,9 @@ document.addEventListener('mouseup', () => {
       isResizingSelection = false;
       resizeHandleIndex = -1;
     }
+    if (mode !== "selection" && mode !== "lasso") {
+    backgroundSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height); // this is to fix the bug which made adding new things after selection mode impossible due to background_snapshot not updating adequately
+  }
   saveCanvas()
 });
 
@@ -320,6 +335,38 @@ brush_select.addEventListener("input",function(){
   clearSelectionHandles()
   })
 
+lasso_tool.addEventListener("click", function(event){
+  mode = "lasso"
+});
+
+image_input.addEventListener("change",function(event){
+    clearSelectionHandles();
+    const file = event.target.files[0]; 
+    const reader = new FileReader();
+    reader.onload = function(e) {  // first the file loads, then separately it loads the image again
+        const img = new Image();
+        img.onload = () => {
+            //ctx.drawImage(img, canvas.width/8, canvas.height/8);
+            backgroundSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            //gotta send the 4 cornor points in selectino path
+              selection = {
+              img: img,
+              x: canvas.width/8,
+              y: canvas.height/8,
+              width: img.width,
+              height: img.height,
+              scale: 1,
+              rotation: 0,
+              offsetX: 0,
+              offsetY: 0
+            };
+            mode = "selection"      
+        };
+        img.src = e.target.result; // Set src after setting onload
+    };
+    reader.readAsDataURL(file); // Read file
+})
+  
 window.addEventListener("keydown", function(event){
   if (event.defaultPrevented) {
     return; // Do nothing if the event was already processed
@@ -328,37 +375,37 @@ window.addEventListener("keydown", function(event){
     case "b":
       mode = "brush"
       brush_select.value="brush"
-      clearSelectionHandles()
+      clearSelectionHandles(true)
       break;
     case "r":
       mode = "rect_fill"
       brush_select.value="rect_fill"
-      clearSelectionHandles()
+      clearSelectionHandles(true)
       break;
     case "R":
       mode = "rect_outline"
       brush_select.value="rect_outline"
-      clearSelectionHandles()
+      clearSelectionHandles(true)
       break;
     case "t":
       mode = "triangle_fill"
       brush_select.value="triangle_fill"
-      clearSelectionHandles()
+      clearSelectionHandles(true)
       break;
     case "T":
       mode = "triangle_outline"
       brush_select.value="triangle_outline"
-      clearSelectionHandles()
+      clearSelectionHandles(true)
       break;
     case "c":
       mode = "circle_fill"
       brush_select.value="circle_fill"
-      clearSelectionHandles()
+      clearSelectionHandles(true)
       break;
     case "C":
       mode = "circle_outline"
       brush_select.value="circle_outline"
-      clearSelectionHandles()
+      clearSelectionHandles(true)
     default:
       return; // Quit when this doesn't handle the key event.
   }
