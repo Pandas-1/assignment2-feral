@@ -11,6 +11,7 @@ const lasso_tool = document.getElementById("selection_lasso");
 const image_input = document.getElementById("image-upload");
 const undo_button = document.getElementById("undo");
 const redo_button = document.getElementById("redo");
+const toggle_night = document.getElementById("light_mode_toggle");
 
 
 ctx.fillRect(width/8,10,width*6/8,120)
@@ -38,7 +39,7 @@ let selection_path = [];
 let select_start_x = null;
 let select_start_y = null;
 let selection = null;
-let background_color = "#ffffff"
+let canvas_color = window.getComputedStyle(document.documentElement).getPropertyValue('--canvas-color');
 let isDraggingSelection = false;
 let isResizingSelection = false;
 let dragOffsetX = 0;
@@ -365,6 +366,10 @@ brushThickness.addEventListener("input", function(event){
 
 canvas_clear.addEventListener("click",function(event){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    console.log(canvas_clear)
+    // ctx.fillStyle = canvas_color
+    ctx.fillStyle = "rgba(0, 0, 0, 0)"
+    ctx.fillRect(0,0,canvas.width,canvas.height)
 })
 
 brush_select.addEventListener("input",function(){
@@ -375,6 +380,50 @@ brush_select.addEventListener("input",function(){
 lasso_tool.addEventListener("click", function(event){
   mode = "lasso"
 });
+
+toggle_night.addEventListener("click", function(event){
+  document.body.classList.toggle('light-mode');
+  canvas_color = window.getComputedStyle(document.documentElement).getPropertyValue('--canvas-color');
+})
+
+document.getElementById("brush").addEventListener("click", function(event){
+  mode = "brush"
+  clearSelectionHandles()
+})
+
+document.getElementById("line").addEventListener("click", function(event){
+  mode = "line"
+  clearSelectionHandles()
+})
+
+document.getElementById("rect_outline").addEventListener("click", function(event){
+  mode = "rect_outline"
+  clearSelectionHandles()
+})
+
+document.getElementById("rect_fill").addEventListener("click", function(event){
+  mode = "rect_fill"
+  clearSelectionHandles()
+})
+
+document.getElementById("circle_outline").addEventListener("click", function(event){
+  mode = "circle_outline"
+  clearSelectionHandles()
+})
+
+document.getElementById("circle_fill").addEventListener("click", function(event){
+  mode = "circle_fill"
+  clearSelectionHandles()
+})
+document.getElementById("triangle_fill").addEventListener("click", function(event){
+  mode = "triangle_fill"
+  clearSelectionHandles()
+})
+document.getElementById("triangle_outline").addEventListener("click", function(event){
+  mode = "triangle_outline"
+  clearSelectionHandles()
+})
+
 
 image_input.addEventListener("change",function(event){
     clearSelectionHandles();

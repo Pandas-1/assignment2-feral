@@ -6,16 +6,30 @@
   <title>"Its gonna be joever"</title>
   <script src="the_thing_that_does_the_thing.js" defer></script>
   <link rel="stylesheet" href="plusplusstyle.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitcount+Single+Ink:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>rat-draw</h1>
+  <div id="nav">
+    <img src="./assets/logo-rat.svg">
+    <h1>RAT-DRAW</h1>
+    <input type="image" src="./assets/icon-modetoggle.svg" id="light_mode_toggle">
+  </div>
+  
   <canvas id="canvas" width = "1440" height="480"></canvas>
-  <div id="selection_panel">
+  <div class="floating-panel">
+    <div class="actions-1">
+      <input type="image" src="./assets/icon-undo.svg" id="undo" alt="Undo" class="brushicons">
+      <input type="image" src="./assets/icon-redo.svg" id="redo" alt="Redo" class="brushicons">
+      <input type="image" src="./assets/icon-wipe.svg" id="clear_canvas" alt="Clear canvas" class="brushicons">
+    </div>
+    <h5>Pick Color</h5>
     <input type="color" id="color_picker" value="#000000">
+    <h5>Stroke Thickness</h5>
     <input type="range" id="brush_thicckness" min="0" max="100">
-    <input type="button" id="clear_canvas" value="clear canvas">
-    <label for="Brush">Choose a brush:</label>
-    <select name="Brush Selector" id="brush_selector">
+    
+    <select name="Brush Selector" id="brush_selector" style="display: none;">
       <option value="brush" selected>Brush</option>
       <option value="rect_outline">Rectangle Outline</option>
       <option value="rect_fill">Rectangle Fill</option>
@@ -25,11 +39,25 @@
       <option value="triangle_fill">Triangle Fill</option>
       <option value="triangle_outline">Triangle Outline</option>
     </select>
-    <input type="button" id="selection_lasso" value="lasso">
-    <input type="file" id="image-upload" accept=".png , .jpg , .jpeg">
-    <input type="text" id="insert-text" value="Add Text">
-    <input type="button" id="undo" value="undo">
-    <input type="button" id="redo" value="redo" >
+    
+    <div class="iconsdiv">
+      <input type="image" src="./assets/icon-brush.svg" alt="Brush tool" class="brushicons" id="brush">
+      <input type="image" src="./assets/icon-line.svg" alt="Brush tool" class="brushicons" id="line">
+      <input type="image" src="./assets/icon-rectangle-outline.svg" alt="Brush tool" class="brushicons" id="rect_outline">
+      <input type="image" src="./assets/icon-rectangle-fill.svg" alt="Brush tool" class="brushicons" id="rect_fill">
+      <input type="image" src="./assets/icon-circle-outline.svg" alt="Brush tool" class="brushicons" id="circle_outline">
+      <input type="image" src="./assets/icon-circle-fill.svg" alt="Brush tool" class="brushicons" id="circle_fill">
+      <input type="image" src="./assets/icon-triangle-fill.svg" alt="Brush tool" class="brushicons" id="triangle_fill">
+      <input type="image" src="./assets/icon-triangle-outline.svg" alt="Brush tool" class="brushicons" id="triangle_outline">
+      <input type="image" src="./assets/icon-lasso.svg" id="selection_lasso" alt="Lasso" class="brushicons" id="lasso">
+      <input type="image" src="./assets/icon-upload.svg" id="image-upload-btn" onclick="document.getElementById('image-upload').click()" alt="Lasso" class="brushicons">
+    </div>
+    <!--8787aa-->
+  
+    <input type="file" class="button" id="image-upload" accept=".png , .jpg , .jpeg">
+    <!--<input type="text" id="insert-text" value="Add Text">-->
+    
+    
   </div>
 </body>
 </html>
