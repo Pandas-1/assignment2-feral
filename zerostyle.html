@@ -5,12 +5,12 @@
   <meta name="RAT-DRAW" content="Its not looking good" lang="en" />
   <title>"Its gonna be joever"</title>
   <script src="the_thing_that_does_the_thing.js" defer></script>
+  <link rel="stylesheet" href="plusplusstyle.css">
 </head>
 <body>
   <h1>rat-draw</h1>
-  <p> crazy crazy   tom </p>
   <canvas id="canvas" width = "1440" height="480"></canvas>
-  <div>
+  <div id="selection_panel">
     <input type="color" id="color_picker" value="#000000">
     <input type="range" id="brush_thicckness" min="0" max="100">
     <input type="button" id="clear_canvas" value="clear canvas">
@@ -29,7 +29,7 @@
     <input type="file" id="image-upload" accept=".png , .jpg , .jpeg">
     <input type="text" id="insert-text" value="Add Text">
     <input type="button" id="undo" value="undo">
-    <input type="button" id="redo" value="redo">
+    <input type="button" id="redo" value="redo" >
   </div>
 </body>
 </html>

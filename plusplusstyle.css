@@ -1,0 +1,8 @@
+div#selection_panel{
+    color: "blue";
+    text-align: center;
+}
+canvas{
+    width: 100vw;
+    height: 75vh;
+}

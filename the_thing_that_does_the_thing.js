@@ -3,7 +3,6 @@ const ctx = canvas.getContext("2d");
 ctx.fillStyle = "green";
 let width = window.innerWidth;
 let height = window.innerHeight;
-const rect = canvas.getBoundingClientRect()
 const colorPicker = document.getElementById("color_picker");
 const brushThickness = document.getElementById("brush_thicckness");
 const canvas_clear = document.getElementById("clear_canvas");
@@ -209,6 +208,7 @@ function clearSelectionHandles(exit_selection = false) {
 window.addEventListener("load", loadCanvas);
 
 document.addEventListener('mousedown', (event) => {
+  const rect = canvas.getBoundingClientRect()
   isMouseDown = true;
     const xfactor = canvas.width / rect.width; //this is to scale the screen positioning to the canvas positioning
     const yfactor = canvas.height / rect.height;
@@ -251,6 +251,7 @@ document.addEventListener('mousedown', (event) => {
     }
 
     if (mode === "selection" && selection) {
+      const rect = canvas.getBoundingClientRect()
       const xfactor = canvas.width /rect.width;
       const yfactor = canvas.height /rect.height;
       const mx = Math.floor((event.clientX- rect.left)*xfactor);
@@ -493,10 +494,11 @@ window.addEventListener("keydown", function(event){
 
 
 document.addEventListener('mousemove', function(event){
+    const rect = canvas.getBoundingClientRect()
     if (isMouseDown && event.target === canvas){
     const xfactor = canvas.width / rect.width; //this is to scale the screen positioning to the canvas positioning
     const yfactor = canvas.height / rect.height;
-    mouse_x = event.clientX
+    mouse_x = event.clientX + window.scrollX
     mouse_y = event.clientY
     ctx.fillStyle = brush_color;
     const canvas_x = Math.floor((mouse_x - rect.left)*xfactor)
