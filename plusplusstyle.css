@@ -1,5 +1,6 @@
 :root {
   --canvas-color: rgba(34, 34, 34, 0); /*cool navy #171f26 */
+  --text-color: #a6a9ac;
   --background-color: #222222;
   --alt-color:#456882;
   --highlight-color:#D2C1B6;
@@ -11,8 +12,9 @@
 }
 body.light-mode{
       --canvas-color: #FCF8F8;
+      --text-color: #31373d;
       --background-color: #FBEFEF;
-      --alt-color:#F9DFDF;
+      --alt-color:#f1bbbb;
       --highlight-color:#F5AFAF;
       --island-color:rgba(255, 255, 255, 0.6);
       --island-border:rgba(255, 255, 255, 0.08);
@@ -55,6 +57,7 @@ input#color_picker{
 }
 h5{
     margin:1vh;
+    color:var(--text-color);
 }
 input#brush_thicckness{
     /*transform: translateX(1vh);*/

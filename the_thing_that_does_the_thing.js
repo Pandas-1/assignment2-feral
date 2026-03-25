@@ -64,10 +64,11 @@ function loadCanvas() {
   img.src = dataURL;
 
   img.onload = function () {
+    resizeCanvas()
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
     saveStackPush()//inital push to save the background
-    resizeCanvas()
+
   };
 }
 
@@ -118,6 +119,7 @@ function undo_draw(){
     old_image = save_stack_undo[undo_tsp]
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas
             ctx.putImageData(old_image, 0, 0); 
+    clearSelectionHandles(); 
 }}
 
 function redo_draw(){
@@ -140,12 +142,16 @@ function drawSelectionHandles(sel) {
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(sel.rotation);
+  ctx.font = "15px Times New Roman";
+  ctx.fillStyle = "#e4a649";
+  ctx.fillText("change tool to confirm , press q or w to rotate" , 100, 100)
   ctx.strokeStyle = "#0099ff";
   ctx.lineWidth = 1;
   ctx.setLineDash([4, 3]);
   ctx.strokeRect(-hw, -hh, hw * 2, hh * 2);
   ctx.setLineDash([]);
   ctx.restore();
+
 
   // Draw handles
   handles.forEach(h => {
@@ -215,7 +221,12 @@ function resizeCanvas() {
 
 
 
-window.addEventListener("load", loadCanvas);
+window.addEventListener("load", function(event){
+  loadCanvas();
+    if(localStorage.getItem("mode") === "light mode"){
+    document.body.classList.toggle('light-mode')
+  }
+})
 
 document.addEventListener('mousedown', (event) => {
   const rect = canvas.getBoundingClientRect()
@@ -393,44 +404,50 @@ lasso_tool.addEventListener("click", function(event){
 toggle_night.addEventListener("click", function(event){
   document.body.classList.toggle('light-mode');
   canvas_color = window.getComputedStyle(document.documentElement).getPropertyValue('--canvas-color');
+    if(document.body.classList.contains('light-mode')){
+    localStorage.setItem("mode", "light mode")
+  }
+  else {
+    localStorage.removeItem("mode")
+  }
 })
 
 document.getElementById("brush").addEventListener("click", function(event){
   mode = "brush"
-  clearSelectionHandles()
+  clearSelectionHandles(true)
 })
 
 document.getElementById("line").addEventListener("click", function(event){
   mode = "line"
-  clearSelectionHandles()
+  clearSelectionHandles(true)
 })
 
 document.getElementById("rect_outline").addEventListener("click", function(event){
   mode = "rect_outline"
-  clearSelectionHandles()
+  clearSelectionHandles(true)
 })
 
 document.getElementById("rect_fill").addEventListener("click", function(event){
   mode = "rect_fill"
-  clearSelectionHandles()
+  clearSelectionHandles(true)
 })
 
 document.getElementById("circle_outline").addEventListener("click", function(event){
   mode = "circle_outline"
-  clearSelectionHandles()
+  clearSelectionHandles(true)
 })
 
 document.getElementById("circle_fill").addEventListener("click", function(event){
   mode = "circle_fill"
-  clearSelectionHandles()
+  clearSelectionHandles(true)
 })
 document.getElementById("triangle_fill").addEventListener("click", function(event){
   mode = "triangle_fill"
-  clearSelectionHandles()
+  clearSelectionHandles(true)
 })
 document.getElementById("triangle_outline").addEventListener("click", function(event){
   mode = "triangle_outline"
-  clearSelectionHandles()
+  clearSelectionHandles(true)
 })
 
 window.addEventListener('resize', resizeCanvas);
