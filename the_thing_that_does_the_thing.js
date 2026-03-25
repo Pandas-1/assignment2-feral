@@ -67,6 +67,7 @@ function loadCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
     saveStackPush()//inital push to save the background
+    resizeCanvas()
   };
 }
 
@@ -204,6 +205,14 @@ function clearSelectionHandles(exit_selection = false) {
   }
   ctx.putImageData(backgroundSnapshot, 0, 0);
 }
+
+function resizeCanvas() {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    undo_draw() //this is DIABOLICAL THIS WORKS but now ovals are good again
+    redo_draw()
+}
+
 
 
 window.addEventListener("load", loadCanvas);
@@ -424,6 +433,7 @@ document.getElementById("triangle_outline").addEventListener("click", function(e
   clearSelectionHandles()
 })
 
+window.addEventListener('resize', resizeCanvas);
 
 image_input.addEventListener("change",function(event){
     clearSelectionHandles();
