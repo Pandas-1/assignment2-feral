@@ -12,6 +12,7 @@ const image_input = document.getElementById("image-upload");
 const undo_button = document.getElementById("undo");
 const redo_button = document.getElementById("redo");
 const toggle_night = document.getElementById("light_mode_toggle");
+const canvas_container = document.getElementById("canvas-container")
 
 
 ctx.fillRect(width/8,10,width*6/8,120)
@@ -48,6 +49,7 @@ let resizeHandleIndex = -1;
 let backgroundSnapshot = null
 let save_stack_undo = []
 let undo_tsp = -1
+let text_boxes = []
 
 
 let isMouseDown = false;
@@ -55,6 +57,7 @@ let mode = "brush"
 
 function saveCanvas() {
   const dataURL = canvas.toDataURL('image/png')
+  localStorage.setItem("textBoxes", text_boxes)
   localStorage.setItem("savedCanvas", dataURL);
 }
 function loadCanvas() {
@@ -219,7 +222,29 @@ function resizeCanvas() {
     redo_draw()
 }
 
+function createTextBox(x, y) {
+  const TextBox = document.createElement("textarea");
+    TextBox.style.position = "absolute";
+    TextBox.style.left = x + "px";
+    TextBox.style.top = y + "px";
+    TextBox.style.font = "20px Arial";
+    TextBox.style.color = brush_color;
+    TextBox.style.background = "transparent";
+    TextBox.style.border = "1px dashed gray";
+    TextBox.style.outline = "none";
+    TextBox.style.resize = "none";
 
+    canvas_container.appendChild(TextBox);
+    TextBox.focus();
+    text_boxes.push(TextBox)
+    TextBox.addEventListener("blur", () => {
+    TextBox.style.border = "none";})
+    TextBox.addEventListener("focus", () => {
+    TextBox.style.border = "1px dashed gray";
+  });
+    return TextBox;
+}
+    
 
 window.addEventListener("load", function(event){
   loadCanvas();
@@ -291,6 +316,12 @@ document.addEventListener('mousedown', (event) => {
 
   
 });
+
+canvas.addEventListener("click", (event) => {
+  if (mode === "text"){
+    createTextBox(event.clientX , event.clientY)
+  }
+})
 
 document.addEventListener('mouseup', (event) => {
   isMouseDown = false;
@@ -447,6 +478,10 @@ document.getElementById("triangle_fill").addEventListener("click", function(even
 })
 document.getElementById("triangle_outline").addEventListener("click", function(event){
   mode = "triangle_outline"
+  clearSelectionHandles(true)
+})
+document.getElementById("text_tool").addEventListener("click", function(event){
+  mode = "text"
   clearSelectionHandles(true)
 })
 
