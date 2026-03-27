@@ -95,9 +95,9 @@ function getSelectionHandles(sel){
   const sin = Math.sin(sel.rotation);
 
   const localPoints = [
-    [-hw, -hh], [0, -hh], [hw, -hh],
-    [-hw,   0],            [hw,   0],
-    [-hw,  hh], [0,  hh], [hw,  hh],
+    [-hw, -hh],  [hw, -hh],
+                
+    [-hw,  hh],  [hw,  hh],
   ];
 
   return localPoints.map(([lx, ly]) => ({
@@ -115,7 +115,7 @@ function saveStackPush(){
 }
 
 function undo_draw(){
-  if (undo_tsp>=0){
+  if (undo_tsp>0){
     undo_tsp--
     console.log(undo_tsp)
     let old_image = new Image();
@@ -406,7 +406,9 @@ document.addEventListener('mouseup', (event) => {
     backgroundSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height); // this is to fix the bug which made adding new things after selection mode impossible due to background_snapshot not updating adequately
   }
     if (canvas.contains(event.target)){
-      saveStackPush()
+      if(mode !== "selection"){
+        saveStackPush()
+      }
     }
   saveCanvas()
 });
