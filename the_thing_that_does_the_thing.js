@@ -26,7 +26,7 @@ let interpolation_x = null;
 let interpolation_y = null;
 let brush_radius_const = 80;
 let brush_radius = 20;
-let brush_color = "#000000";
+let brush_color = "#ffffff";
 let rect_start_x = null;
 let rect_start_y = null;
 let circle_centre_x = null;
@@ -250,6 +250,8 @@ window.addEventListener("load", function(event){
   loadCanvas();
     if(localStorage.getItem("mode") === "light mode"){
     document.body.classList.toggle('light-mode')
+    brush_color="#000000"
+    colorPicker.value = "#000000"
   }
 })
 
@@ -290,6 +292,7 @@ document.addEventListener('mousedown', (event) => {
   }
     if( mode === "lasso"){
         selection_path = [];
+        snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
         is_selecting = true;
         select_start_x = canvas_x_start;
         select_start_y = canvas_y_start;
@@ -343,6 +346,7 @@ document.addEventListener('mouseup', (event) => {
     }
 
     tctx.closePath();
+    ctx.putImageData(snapshot, 0, 0); // clears the drawn lasso line
     tctx.clip();
 
     tctx.drawImage(canvas, -bounds.x, -bounds.y);
@@ -362,9 +366,10 @@ document.addEventListener('mouseup', (event) => {
 
     ctx.restore();
     ctx.globalCompositeOperation = "source-over";
+
     backgroundSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
     snapshot = backgroundSnapshot;
-
+    
     //now you store the selected thing
     selection = {
       img: temp_canvas,
@@ -377,7 +382,7 @@ document.addEventListener('mouseup', (event) => {
       offsetX: 0,
       offsetY: 0
     };
-    
+
     mode = "selection";
     // show the handle bars instantly after mouse down
     selection_path = [];
@@ -437,9 +442,13 @@ toggle_night.addEventListener("click", function(event){
   canvas_color = window.getComputedStyle(document.documentElement).getPropertyValue('--canvas-color');
     if(document.body.classList.contains('light-mode')){
     localStorage.setItem("mode", "light mode")
+    brush_color = "#000000"
+    colorPicker.value = "#000000"
   }
   else {
     localStorage.removeItem("mode")
+    brush_color = "#ffffff"
+    colorPicker.value = "#ffffff"
   }
 })
 
