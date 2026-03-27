@@ -210,6 +210,7 @@ function clearSelectionHandles(exit_selection = false) {
 
       backgroundSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
       selection = null;
+      saveStackPush();
       return;
   }
   ctx.putImageData(backgroundSnapshot, 0, 0);
@@ -222,6 +223,7 @@ function resizeCanvas() {
     redo_draw()
 }
 
+/*
 function createTextBox(x, y) {
   const TextBox = document.createElement("textarea");
     TextBox.style.position = "absolute";
@@ -244,7 +246,63 @@ function createTextBox(x, y) {
   });
     return TextBox;
 }
-    
+*/
+
+function createTextBox(event) {
+    snapshot = ctx.getImageData(0,0,canvas.width, canvas.height)
+    const rect = canvas.getBoundingClientRect()
+    const xfactor = canvas.width / rect.width; //this is to scale the screen positioning to the canvas positioning
+    const yfactor = canvas.height / rect.height;
+    mouse_x = event.clientX
+    mouse_y = event.clientY
+    const canvas_x= Math.floor((mouse_x - rect.left)*xfactor)
+    const canvas_y= Math.floor((mouse_y - rect.top)*yfactor)
+    text = window.prompt("Enter the text");
+    if (!text) {return}
+    ctx.font = brush_radius*2 + "px serif";
+    const metrics = ctx.measureText(text);
+    const textWidth = metrics.width;
+    const textHeight = brush_radius*2; // approximation
+    // draw
+    ctx.fillStyle = brush_color;
+    ctx.fillText(text, canvas_x, canvas_y);
+    saveStackPush();
+    const text_obj = {
+        x: canvas_x,
+        y: canvas_y,
+        width: textWidth,
+        height: textHeight,
+        text: text,
+        fontSize: brush_radius*2,
+        color: brush_color
+    };
+    text_boxes.push(text_obj);
+}
+
+function isInsideText(mx, my, t) {
+    return (
+        mx >= t.x &&
+        mx <= t.x + t.width &&
+        my >= (t.y - t.height) &&
+        my <= t.y
+    );
+}
+
+function redrawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // restore base image
+    if (backgroundSnapshot) {
+        ctx.putImageData(backgroundSnapshot, 0, 0);
+    }
+
+    // redraw text
+    text_boxes.forEach(t => {
+        ctx.font = t.fontSize + "px serif";
+        ctx.fillStyle = t.color;
+        ctx.fillText(t.text, t.x, t.y);
+    });
+}
 
 window.addEventListener("load", function(event){
   loadCanvas();
@@ -321,10 +379,30 @@ document.addEventListener('mousedown', (event) => {
 });
 
 canvas.addEventListener("click", (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const xfactor = canvas.width / rect.width;
+    const yfactor = canvas.height / rect.height;
+
+    const mx = Math.floor((event.clientX - rect.left) * xfactor);
+    const my = Math.floor((event.clientY - rect.top) * yfactor);
   if (mode === "text"){
-    createTextBox(event.clientX , event.clientY)
-  }
-})
+      for (let i = text_boxes.length - 1; i >= 0; i--) {
+        const t = text_boxes[i];
+        if (isInsideText(mx, my, t)) {
+
+            const newText = prompt("Edit text:", t.text);
+            if (newText !== null) {
+                t.text = newText;
+                redrawCanvas()
+            }
+            return;
+        }}
+      createTextBox(event)
+    //check if it is clicking on a preexiting text-box
+    //if no make it
+    //if yes 
+  }}
+)
 
 document.addEventListener('mouseup', (event) => {
   isMouseDown = false;
