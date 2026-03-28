@@ -29,7 +29,8 @@ body.light-mode{
   top: 14.5vh;
   left: 4vh;
 
-  width: 10vw;
+  width: clamp(120px, 10vw, 300px); 
+  min-width: 120px; 
   padding: 2vh;
   padding-right: 5vh;
 
@@ -105,6 +106,12 @@ input#brush_thicckness{
 .brushicons:hover {
     transform: scale(1.1);
     transition-duration: 0.2s;
+}
+
+.active-tool {
+  opacity: 1;
+  filter: brightness(0.8);
+  transform: scale(1.2);
 }
 
 .actions-1 > input.brushicons {

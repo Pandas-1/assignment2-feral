@@ -55,6 +55,61 @@ let text_boxes = []
 let isMouseDown = false;
 let mode = "brush"
 
+function updateToolUI(newMode) {
+  // remove highlight
+  document.querySelectorAll(".brushicons").forEach(btn => {
+    btn.classList.remove("active-tool");
+  });
+  const modeToId = {
+    brush: "brush",
+    line: "line",
+    rect_outline: "rect_outline",
+    rect_fill: "rect_fill",
+    circle_outline: "circle_outline",
+    circle_fill: "circle_fill",
+    triangle_fill: "triangle_fill",
+    triangle_outline: "triangle_outline",
+    lasso: "selection_lasso",
+    text: "text_tool"
+  };
+
+  const id = modeToId[newMode];
+  if (id) {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.add("active-tool");
+  }
+
+  // cursor
+  switch (newMode) {
+    case "line":
+    case "rect_outline":
+    case "rect_fill":
+    case "circle_outline":
+    case "circle_fill":
+    case "triangle_fill":
+    case "triangle_outline":
+      canvas.style.cursor = "crosshair";
+      break;
+
+    case "brush":
+    case "lasso":
+      canvas.style.cursor = "url('./assets/cursor-brush.png') 16 16, auto";
+      break;
+
+    case "selection":
+      canvas.style.cursor = "move";
+      break;
+
+    case "text":
+      canvas.style.cursor = "text";
+      break;
+
+      
+    default:
+      canvas.style.cursor = "default";
+  }
+}
+
 function saveCanvas() {
   const dataURL = canvas.toDataURL('image/png')
   localStorage.setItem("textBoxes", text_boxes)
@@ -462,6 +517,7 @@ document.addEventListener('mouseup', (event) => {
     };
 
     mode = "selection";
+    updateToolUI("selection")
     // show the handle bars instantly after mouse down
     selection_path = [];
       const cx = selection.x + selection.width / 2 + selection.offsetX;
@@ -505,6 +561,7 @@ canvas_clear.addEventListener("click",function(event){
     console.log(canvas_clear)
     // ctx.fillStyle = canvas_color
     ctx.fillStyle = "rgba(0, 0, 0, 0)"
+    text_boxes = []
     ctx.fillRect(0,0,canvas.width,canvas.height)
 })
 
@@ -515,6 +572,7 @@ brush_select.addEventListener("input",function(){
 
 lasso_tool.addEventListener("click", function(event){
   mode = "lasso"
+  updateToolUI("lasso")
 });
 
 toggle_night.addEventListener("click", function(event){
@@ -534,43 +592,52 @@ toggle_night.addEventListener("click", function(event){
 
 document.getElementById("brush").addEventListener("click", function(event){
   mode = "brush"
+  updateToolUI("brush")
   clearSelectionHandles(true)
 })
 
 document.getElementById("line").addEventListener("click", function(event){
   mode = "line"
+  updateToolUI("line")
   clearSelectionHandles(true)
 })
 
 document.getElementById("rect_outline").addEventListener("click", function(event){
   mode = "rect_outline"
+  updateToolUI("rect_outline")
   clearSelectionHandles(true)
 })
 
 document.getElementById("rect_fill").addEventListener("click", function(event){
   mode = "rect_fill"
+  updateToolUI("rect_fill")
   clearSelectionHandles(true)
 })
 
 document.getElementById("circle_outline").addEventListener("click", function(event){
   mode = "circle_outline"
+  updateToolUI("circle_outline")
   clearSelectionHandles(true)
 })
 
 document.getElementById("circle_fill").addEventListener("click", function(event){
   mode = "circle_fill"
+  updateToolUI("circle_fill")
   clearSelectionHandles(true)
 })
 document.getElementById("triangle_fill").addEventListener("click", function(event){
   mode = "triangle_fill"
+  updateToolUI("triangle_fill")
   clearSelectionHandles(true)
 })
 document.getElementById("triangle_outline").addEventListener("click", function(event){
   mode = "triangle_outline"
+  updateToolUI("triangle_outline")
   clearSelectionHandles(true)
 })
 document.getElementById("text_tool").addEventListener("click", function(event){
   mode = "text"
+  updateToolUI("text")
   clearSelectionHandles(true)
 })
 
@@ -597,6 +664,7 @@ image_input.addEventListener("change",function(event){
               offsetX: 0,
               offsetY: 0
             };
+            updateToolUI("selection")
             mode = "selection"      
         };
         img.src = e.target.result; // Set src after setting onload
@@ -655,35 +723,42 @@ window.addEventListener("keydown", function(event){
     case "b":
       mode = "brush"
       brush_select.value="brush"
+      updateToolUI("brush")
       clearSelectionHandles(true)
       break;
     case "r":
       mode = "rect_fill"
       brush_select.value="rect_fill"
+      updateToolUI("rect_fill")
       clearSelectionHandles(true)
       break;
     case "R":
       mode = "rect_outline"
       brush_select.value="rect_outline"
+      updateToolUI("rect_outline")
       clearSelectionHandles(true)
       break;
     case "t":
       mode = "triangle_fill"
       brush_select.value="triangle_fill"
+      updateToolUI("triangle_fill")
       clearSelectionHandles(true)
       break;
     case "T":
       mode = "triangle_outline"
+      updateToolUI("triangle_outline")
       brush_select.value="triangle_outline"
       clearSelectionHandles(true)
       break;
     case "c":
       mode = "circle_fill"
+      updateToolUI("circle_fill")
       brush_select.value="circle_fill"
       clearSelectionHandles(true)
       break;
     case "C":
       mode = "circle_outline"
+      updateToolUI("circle_outline")
       brush_select.value="circle_outline"
       clearSelectionHandles(true)
     default:
