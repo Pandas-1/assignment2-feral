@@ -13,6 +13,21 @@ const undo_button = document.getElementById("undo");
 const redo_button = document.getElementById("redo");
 const toggle_night = document.getElementById("light_mode_toggle");
 const canvas_container = document.getElementById("canvas-container")
+const ModeType = {
+  BRUSH : "brush",
+  RECT_FILL : "rect_fill",
+  RECT_OUTLINE : "rect_outline",
+  CIRCLE_FILL : "circle_fill",
+  CIRCLE_OUTLINE : "circle_outline",
+  TRIANGLE_FILL : "triangle_fill",
+  TRIANGLE_OUTLINE : "triangle_outline",
+  IMAGE : "image",
+  LASSO : "lasso",
+  SELECTION : "selection",
+  LINE : "line",
+  TEXT: "text",
+  
+}
 
 
 ctx.fillRect(width/8,10,width*6/8,120)
@@ -53,7 +68,7 @@ let text_boxes = []
 
 
 let isMouseDown = false;
-let mode = "brush"
+let mode = ModeType.BRUSH
 
 function updateToolUI(newMode) {
   // remove highlight
@@ -377,33 +392,33 @@ document.addEventListener('mousedown', (event) => {
     mouse_y = event.clientY
     canvas_x_start = Math.floor((mouse_x - rect.left)*xfactor)
     canvas_y_start = Math.floor((mouse_y - rect.top)*yfactor)
-  if( mode === "rect_outline" || mode === "rect_fill"){
+  if( mode === ModeType.RECT_OUTLINE || mode === ModeType.RECT_FILL){
     //ctx.putImageData(snapshot, 0, 0);
     rect_start_x = canvas_x_start
     rect_start_y = canvas_y_start
     // for live preview of the thing
     snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
   }
-  if( mode === "circle_outline" || mode === "circle_fill"){
+  if( mode === ModeType.CIRCLE_OUTLINE || mode === ModeType.CIRCLE_FILL){
     circle_centre_x = canvas_x_start
     circle_centre_y = canvas_y_start
     snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
   }
-    if( mode === "line"){
+    if( mode === ModeType.LINE){
     //ctx.putImageData(snapshot, 0, 0);
     line_start_x = canvas_x_start
     line_start_y = canvas_y_start
     // for live preview of the thing
     snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
   }
-      if( mode === "triangle_fill" || mode === "triangle_outline"){
+      if( mode === ModeType.TRIANGLE_FILL || mode === ModeType.TRIANGLE_OUTLINE){
     //ctx.putImageData(snapshot, 0, 0);
     triangle_start_x = canvas_x_start
     triangle_start_y = canvas_y_start
     // for live preview of the thing
     snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
   }
-    if( mode === "lasso"){
+    if( mode === ModeType.LASSO){
         selection_path = [];
         snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
         is_selecting = true;
@@ -412,7 +427,7 @@ document.addEventListener('mousedown', (event) => {
         
     }
 
-    if (mode === "selection" && selection) {
+    if (mode === ModeType.SELECTION && selection) {
       const rect = canvas.getBoundingClientRect()
       const xfactor = canvas.width /rect.width;
       const yfactor = canvas.height /rect.height;
@@ -440,7 +455,7 @@ canvas.addEventListener("click", (event) => {
 
     const mx = Math.floor((event.clientX - rect.left) * xfactor);
     const my = Math.floor((event.clientY - rect.top) * yfactor);
-  if (mode === "text"){
+  if (mode === ModeType.TEXT){
       for (let i = text_boxes.length - 1; i >= 0; i--) {
         const t = text_boxes[i];
         if (isInsideText(mx, my, t)) {
@@ -463,7 +478,7 @@ document.addEventListener('mouseup', (event) => {
   isMouseDown = false;
   interpolation_x = null;
   interpolation_y = null;
-  if(mode === "lasso" && selection_path.length>2){
+  if(mode === ModeType.LASSO && selection_path.length>2){
     // to like select something you gotta set up a separate canvas, cant really edit orignal it :(
     const bounds = getBounds(selection_path);
     const temp_canvas = document.createElement("canvas");
@@ -516,7 +531,7 @@ document.addEventListener('mouseup', (event) => {
       offsetY: 0
     };
 
-    mode = "selection";
+    mode = ModeType.SELECTION;
     updateToolUI("selection")
     // show the handle bars instantly after mouse down
     selection_path = [];
@@ -531,16 +546,16 @@ document.addEventListener('mouseup', (event) => {
 
       drawSelectionHandles(selection);
     }
-    if (mode === "selection") {
+    if (mode === ModeType.SELECTION) {
       isDraggingSelection = false;
       isResizingSelection = false;
       resizeHandleIndex = -1;
     }
-    if (mode !== "selection" && mode !== "lasso") {
+    if (mode !== ModeType.SELECTION && mode !== ModeType.LASSO) {
     backgroundSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height); // this is to fix the bug which made adding new things after selection mode impossible due to background_snapshot not updating adequately
   }
     if (canvas.contains(event.target)){
-      if(mode !== "selection"){
+      if(mode !== ModeType.SELECTION){
         saveStackPush()
       }
     }
@@ -571,7 +586,7 @@ brush_select.addEventListener("input",function(){
   })
 
 lasso_tool.addEventListener("click", function(event){
-  mode = "lasso"
+  mode = ModeType.LASSO
   updateToolUI("lasso")
 });
 
@@ -591,52 +606,52 @@ toggle_night.addEventListener("click", function(event){
 })
 
 document.getElementById("brush").addEventListener("click", function(event){
-  mode = "brush"
+  mode = ModeType.BRUSH
   updateToolUI("brush")
   clearSelectionHandles(true)
 })
 
 document.getElementById("line").addEventListener("click", function(event){
-  mode = "line"
+  mode = ModeType.LINE
   updateToolUI("line")
   clearSelectionHandles(true)
 })
 
 document.getElementById("rect_outline").addEventListener("click", function(event){
-  mode = "rect_outline"
+  mode = ModeType.RECT_OUTLINE
   updateToolUI("rect_outline")
   clearSelectionHandles(true)
 })
 
 document.getElementById("rect_fill").addEventListener("click", function(event){
-  mode = "rect_fill"
+  mode = ModeType.RECT_FILL
   updateToolUI("rect_fill")
   clearSelectionHandles(true)
 })
 
 document.getElementById("circle_outline").addEventListener("click", function(event){
-  mode = "circle_outline"
+  mode = ModeType.CIRCLE_OUTLINE
   updateToolUI("circle_outline")
   clearSelectionHandles(true)
 })
 
 document.getElementById("circle_fill").addEventListener("click", function(event){
-  mode = "circle_fill"
+  mode = ModeType.CIRCLE_FILL
   updateToolUI("circle_fill")
   clearSelectionHandles(true)
 })
 document.getElementById("triangle_fill").addEventListener("click", function(event){
-  mode = "triangle_fill"
+  mode = ModeType.TRIANGLE_FILL
   updateToolUI("triangle_fill")
   clearSelectionHandles(true)
 })
 document.getElementById("triangle_outline").addEventListener("click", function(event){
-  mode = "triangle_outline"
+  mode = ModeType.TRIANGLE_OUTLINE
   updateToolUI("triangle_outline")
   clearSelectionHandles(true)
 })
 document.getElementById("text_tool").addEventListener("click", function(event){
-  mode = "text"
+  mode = ModeType.TEXT
   updateToolUI("text")
   clearSelectionHandles(true)
 })
@@ -665,7 +680,7 @@ image_input.addEventListener("change",function(event){
               offsetY: 0
             };
             updateToolUI("selection")
-            mode = "selection"      
+            mode = ModeType.SELECTION  
         };
         img.src = e.target.result; // Set src after setting onload
     };
@@ -690,7 +705,7 @@ window.addEventListener("keydown", function(event){
   else if (event.ctrlKey && (event.key === 'z' || event.key === 'Z')) {
         undo_draw()
     }
-  if (mode === "selection"){
+  if (mode === ModeType.SELECTION){
    if(event.key === "q"){
     selection.rotation += 0.1
     ctx.putImageData(backgroundSnapshot, 0, 0);
@@ -721,43 +736,43 @@ window.addEventListener("keydown", function(event){
 
   switch (event.key) {
     case "b":
-      mode = "brush"
+      mode = ModeType.BRUSH
       brush_select.value="brush"
       updateToolUI("brush")
       clearSelectionHandles(true)
       break;
     case "r":
-      mode = "rect_fill"
+      mode = ModeType.RECT_FILL
       brush_select.value="rect_fill"
       updateToolUI("rect_fill")
       clearSelectionHandles(true)
       break;
     case "R":
-      mode = "rect_outline"
+      mode = ModeType.RECT_OUTLINE
       brush_select.value="rect_outline"
       updateToolUI("rect_outline")
       clearSelectionHandles(true)
       break;
     case "t":
-      mode = "triangle_fill"
+      mode = ModeType.TRIANGLE_FILL
       brush_select.value="triangle_fill"
       updateToolUI("triangle_fill")
       clearSelectionHandles(true)
       break;
     case "T":
-      mode = "triangle_outline"
+      mode = ModeType.TRIANGLE_OUTLINE
       updateToolUI("triangle_outline")
       brush_select.value="triangle_outline"
       clearSelectionHandles(true)
       break;
     case "c":
-      mode = "circle_fill"
+      mode = ModeType.CIRCLE_FILL
       updateToolUI("circle_fill")
       brush_select.value="circle_fill"
       clearSelectionHandles(true)
       break;
     case "C":
-      mode = "circle_outline"
+      mode = ModeType.CIRCLE_OUTLINE
       updateToolUI("circle_outline")
       brush_select.value="circle_outline"
       clearSelectionHandles(true)
@@ -782,7 +797,7 @@ document.addEventListener('mousemove', function(event){
     ctx.fillStyle = brush_color; 
     ctx.strokeStyle = brush_color;
     ctx.lineWidth = brush_radius*2
-    if (mode === "brush"){
+    if (mode === ModeType.BRUSH){
     ctx.beginPath();
     ctx.arc(canvas_x, canvas_y, brush_radius, 0, 2 * Math.PI);
     ctx.fill();
@@ -795,7 +810,7 @@ document.addEventListener('mousemove', function(event){
     interpolation_x = canvas_x
     interpolation_y = canvas_y
   }
-    if (mode === "rect_outline" || mode === "rect_fill"){
+    if (mode === ModeType.RECT_OUTLINE || mode === ModeType.RECT_FILL){
       if(!snapshot) return;
       ctx.putImageData(snapshot, 0, 0);
       ctx.beginPath();
@@ -807,25 +822,25 @@ document.addEventListener('mousemove', function(event){
         ctx.stroke();
       }
     }
-    if (mode === "circle_outline" || mode === "circle_fill"){
+    if (mode === ModeType.CIRCLE_OUTLINE || mode === ModeType.CIRCLE_FILL){
       ctx.putImageData(snapshot, 0, 0);
       ctx.beginPath()
       ctx.arc(circle_centre_x, circle_centre_y, (((canvas_x-circle_centre_x)**2)+((canvas_y-circle_centre_y)**2))**0.5, 0, 2 * Math.PI);
-      if (mode === "circle_outline"){
+      if (mode === ModeType.CIRCLE_OUTLINE){
         ctx.stroke();
       }
-      if (mode === "circle_fill"){
+      if (mode === ModeType.CIRCLE_FILL){
         ctx.fill()
       }
     }
-    if (mode === "line"){
+    if (mode === ModeType.LINE){
       ctx.putImageData(snapshot, 0, 0);
       ctx.beginPath();
       ctx.moveTo(line_start_x, line_start_y);
       ctx.lineTo(canvas_x, canvas_y);
       ctx.stroke();
     }
-    if (mode === "triangle_fill" || mode === "triangle_outline"){
+    if (mode === ModeType.TRIANGLE_FILL|| mode === ModeType.TRIANGLE_OUTLINE){
       ctx.putImageData(snapshot, 0, 0);
 
       const x1 = triangle_start_x;
@@ -843,15 +858,15 @@ document.addEventListener('mousemove', function(event){
       ctx.lineTo(x2, y2); 
       ctx.lineTo(x3, y3); 
       ctx.closePath();
-      if (mode === "triangle_outline"){
+      if (mode === ModeType.TRIANGLE_OUTLINE){
       ctx.stroke();
       }
-      if (mode === "triangle_fill"){
+      if (mode === ModeType.TRIANGLE_FILL){
       ctx.fill();
       }
 
       }
-    if (mode === "lasso"){
+    if (mode === ModeType.LASSO){
       selection_path.push({ x: canvas_x, y: canvas_y }); // storing points
 
       if (selection_path.length === 1) {
@@ -863,7 +878,7 @@ document.addEventListener('mousemove', function(event){
         ctx.stroke();
       }
   }
-    if (mode === "selection" && selection) {
+    if (mode === ModeType.SELECTION && selection) {
       ctx.putImageData(backgroundSnapshot, 0, 0);
 
       if (isDraggingSelection) {
